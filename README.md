@@ -1,6 +1,6 @@
 # Count Tokens
 
-A fast CLI tool that counts tokens in git-tracked files using tiktoken encoding, perfect for estimating LLM API costs before processing your codebase.
+A fast CLI tool that counts tokens in files using tiktoken encoding, automatically respecting `.gitignore` patterns. Perfect for estimating LLM API costs before processing your codebase.
 
 ## Why Count Tokens?
 
@@ -102,7 +102,8 @@ The tool automatically detects and counts tokens in 25+ common file extensions:
 
 ## Features
 
-✅ **Git Integration** - Only counts committed/tracked files  
+✅ **Gitignore Aware** - Automatically respects `.gitignore` patterns  
+✅ **No Git Required** - Works in any directory, not just git repositories  
 ✅ **Smart Filtering** - Supports 25+ code file extensions  
 ✅ **Cost Estimation** - Real-time pricing for popular LLM APIs  
 ✅ **Flexible Encodings** - Works with all tiktoken encodings  
@@ -145,8 +146,16 @@ poetry run count-tokens --no-files --encoding o200k_base
 ## Requirements
 
 - **Python 3.11+**
-- **Git repository** (uses `git ls-files` to find tracked files)
 - **tiktoken** library for token encoding
+- **pathspec** library for `.gitignore` pattern matching
+
+## How It Works
+
+The tool walks through all files in the current directory and subdirectories, automatically excluding files that match patterns in:
+- `.gitignore` files (current directory and parent directories)
+- Common ignore patterns (`.git/` directories, etc.)
+
+This means you get clean token counts without build artifacts, dependencies, or other files you typically don't want to include in LLM contexts.
 
 ## Contributing
 

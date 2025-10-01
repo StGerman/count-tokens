@@ -9,6 +9,7 @@ packages = [{include = "count_tokens.py"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 tiktoken = "^0.11.0"
+pathspec = "^0.12.0"
 
 [tool.poetry.scripts]
 count-tokens = "count_tokens:main"

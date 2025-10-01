@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Token counter for git-tracked files.
+Token counter for files respecting .gitignore patterns.
 
-Counts tokens in git-tracked code files using tiktoken encoding.
-Provides per-file breakdown and cost estimates for LLM API calls.
+Counts tokens in code files using tiktoken encoding, automatically
+excluding files based on .gitignore patterns. Provides per-file 
+breakdown and cost estimates for LLM API calls.
 
 Usage:
     ./count_tokens.py                           # Basic usage
@@ -13,15 +14,15 @@ Usage:
     ./count_tokens.py --top 50                  # Show top 50 files
 
 Requirements:
-    pip install tiktoken
+    pip install tiktoken pathspec
 """
 
-import subprocess
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 import tiktoken
+import pathspec
 
 # Default code file extensions
 DEFAULT_EXTENSIONS = (
@@ -41,20 +42,56 @@ COST_PER_TOKEN = {
 }
 
 
-def get_tracked_files() -> List[str]:
-    """Get list of git-tracked files in current repository."""
-    result = subprocess.run(
-        ['git', 'ls-files'],
-        capture_output=True,
-        text=True,
-        check=False
-    )
+def load_gitignore_patterns() -> pathspec.PathSpec:
+    """Load .gitignore patterns from current directory and parent directories."""
+    patterns = []
+    
+    # Common patterns to always ignore
+    default_patterns = [
+        '.git/',
+        '.git/**',
+        '**/.git/',
+        '**/.git/**',
+    ]
+    patterns.extend(default_patterns)
+    
+    # Look for .gitignore files from current directory up to root
+    current_path = Path.cwd()
+    for path in [current_path] + list(current_path.parents):
+        gitignore_path = path / '.gitignore'
+        if gitignore_path.exists():
+            try:
+                with open(gitignore_path, 'r', encoding='utf-8') as f:
+                    gitignore_patterns = f.read().splitlines()
+                    # Filter out comments and empty lines
+                    gitignore_patterns = [
+                        line.strip() for line in gitignore_patterns
+                        if line.strip() and not line.strip().startswith('#')
+                    ]
+                    patterns.extend(gitignore_patterns)
+            except Exception as e:
+                print(f"Warning: Could not read {gitignore_path} ({e})", file=sys.stderr)
+    
+    return pathspec.PathSpec.from_lines('gitwildmatch', patterns)
 
-    if result.returncode != 0:
-        print("Error: Not a git repository", file=sys.stderr)
-        sys.exit(1)
 
-    return result.stdout.strip().split('\n')
+def get_files_respecting_gitignore() -> List[str]:
+    """Get list of files in current directory, respecting .gitignore patterns."""
+    gitignore_spec = load_gitignore_patterns()
+    files = []
+    
+    # Walk through all files in current directory
+    for path in Path.cwd().rglob('*'):
+        if path.is_file():
+            # Convert to relative path for gitignore matching
+            relative_path = path.relative_to(Path.cwd())
+            relative_path_str = str(relative_path)
+            
+            # Check if file should be ignored
+            if not gitignore_spec.match_file(relative_path_str):
+                files.append(relative_path_str)
+    
+    return sorted(files)
 
 
 def count_file_tokens(
@@ -86,7 +123,7 @@ def count_tokens(
     top_n: int = 30
 ) -> None:
     """
-    Count tokens in all git-tracked code files.
+    Count tokens in all files, respecting .gitignore patterns.
 
     Args:
         encoding_name: tiktoken encoding name
@@ -95,7 +132,7 @@ def count_tokens(
         top_n: Number of top files to display
     """
     encoding = tiktoken.get_encoding(encoding_name)
-    files = get_tracked_files()
+    files = get_files_respecting_gitignore()
 
     # Count tokens per file
     file_counts: List[Tuple[str, int]] = []
@@ -136,7 +173,7 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Count tokens in git-tracked files',
+        description='Count tokens in files respecting .gitignore patterns',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__
     )
