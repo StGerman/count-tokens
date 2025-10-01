@@ -1,9 +1,10 @@
 [tool.poetry]
-name = "count-tokens"
+name = "count-tokens-cli"
 version = "0.1.0"
 description = "Count tokens in git-tracked files using tiktoken encoding for LLM API cost estimation"
 authors = ["Stas German <stas.german@gmail.com>"]
 readme = "README.md"
+repository = "https://github.com/StGerman/count-tokens"
 packages = [{include = "count_tokens.py"}]
 
 [tool.poetry.dependencies]

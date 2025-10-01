@@ -12,17 +12,17 @@ When working with LLMs, understanding token usage helps you:
 
 ## Installation
 
-### From PyPI (when published)
+### From PyPI
 
 ```bash
-pip install count-tokens
+pip install count-tokens-cli
 ```
 
 ### From Source
 
 ```bash
-git clone <repository-url>
-cd count_tokens
+git clone https://github.com/StGerman/count-tokens.git
+cd count-tokens
 poetry install
 ```
 
