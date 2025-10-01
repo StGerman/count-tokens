@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "count-tokens"
+version = "0.1.0"
+description = "Count tokens in git-tracked files using tiktoken encoding for LLM API cost estimation"
+authors = ["Stas German <stas.german@gmail.com>"]
+readme = "README.md"
+packages = [{include = "count_tokens.py"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+tiktoken = "^0.11.0"
+
+[tool.poetry.scripts]
+count-tokens = "count_tokens:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
