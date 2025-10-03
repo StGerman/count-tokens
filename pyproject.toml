@@ -12,8 +12,18 @@ python = "^3.11"
 tiktoken = "^0.11.0"
 pathspec = "^0.12.0"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
 [tool.poetry.scripts]
 count-tokens = "count_tokens:main"
+
+[tool.pytest.ini_options]
+testpaths = ["test_count_tokens.py"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v"
 
 [build-system]
 requires = ["poetry-core"]
